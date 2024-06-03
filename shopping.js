@@ -1,16 +1,22 @@
 console.log("hello from Linux!");
 
 $(document).ready(function(){
+
+    localStorage.removeItem(storageKey);
     createProduct("Banana", 20, 1000);
     createProduct("Mango", 15, 1500);
-
+    createProduct("Apple", 30, 1200);
+    createProduct("Orange", 20, 1200);
     loadProductTable();
 })
 
-let list = [];
 let cart = [];
+let storageKey = "products";
 
 function loadProductTable(){
+    let list = productList();
+    let rowNum = 0;
+
     let table = `<table class="table">
                     <thead>
                         <tr>
@@ -24,7 +30,7 @@ function loadProductTable(){
                 <tbody>`;
                 list.forEach(product => {
                     table += `<tr>
-                                <th scope="row">1</th>
+                                <th scope="row">${++rowNum}</th>
                                 <td>${product.Name}</td>
                                 <td>${product.Qty}</td>
                                 <td>${product.Price}</td>
@@ -39,17 +45,38 @@ function loadProductTable(){
         $('#productTable').html(table);
 }
 
+function productList(){
+    let products = localStorage.getItem(storageKey);
+
+    let list = [];
+
+    if(products !== null){
+        list = JSON.parse(products);
+    }
+
+    console.log(list);
+    return list;
+}
+
 function createProduct(name, qty, price){
-    let product = {
+    const product = {
         Id : uuidv4(),
         Name : name,
         Qty : qty,
         Price : price
     }
+
+    let list = productList();
     list.push(product);
+
+    const jsonProduct = JSON.stringify(list);
+    console.log(jsonProduct);
+    localStorage.setItem(storageKey, jsonProduct);
 }
 
 function addCart(id){
+    let list = productList();
+
     let product = list.find(x => x.Id == id);
     console.log(product);
 
@@ -59,8 +86,6 @@ function addCart(id){
     if(isExist){
         console.log(isExist);
         isExist.Qty += count;
-        isExist.Price *= isExist.Qty;
-
 
         if(product.Qty < isExist.Qty){
             alert("no enought product");
@@ -77,6 +102,7 @@ function addCart(id){
 
         $(`#${product.Id}`).html(cartTable);
     }else {
+        
         let newCart = {
             Id : product.Id,
             Name : product.Name,
@@ -105,7 +131,7 @@ function addCart(id){
 function totalAmount(){
     let total = 0;
     cart.forEach(x => {
-        total += x.Price;
+        total += x.Price * x.Qty;
     })
     let display = `<div class="p-2 text-end">  total amount : ${total} </div>`;
 
@@ -113,6 +139,8 @@ function totalAmount(){
 }
 
 function removeCart(id){
+    let list = productList();
+
     let pricePerOne = list.find(x => x.Id == id);
     pricePerOne = pricePerOne.Price;
 
